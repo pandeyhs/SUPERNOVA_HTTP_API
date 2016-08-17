@@ -1,0 +1,5 @@
+nose
+connexion
+flask_cors
+functools32
+tornado

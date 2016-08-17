@@ -1,0 +1,574 @@
+################################################################################
+#(C) Copyright Pumpkin, Inc. All Rights Reserved.
+#
+#This file may be distributed under the terms of the License
+#Agreement provided with this software.
+#
+#THIS FILE IS PROVIDED AS IS WITH NO WARRANTY OF ANY KIND,
+#INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND
+#FITNESS FOR A PARTICULAR PURPOSE.
+################################################################################
+swagger: "2.0"
+
+############################
+### API Information
+############################
+info:
+  version: "0.2"
+  title: "SUPERNOVA ReST API"
+
+############################
+### Protocol
+############################
+#basePath: /v0
+schemes:
+- "http"
+- "https"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+
+############################
+### Paths
+############################
+paths:
+
+# --- System
+  /system:
+    get:
+      tags:
+      - "System"
+      description: "Returns all system data as a JSON object including `time`, `temperature` and `fault-count`."
+      operationId: "controllers.default_controller.system_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/inline_response_200_8"
+      x-tags:
+      - hasMore: "true"
+        tag: "System"
+      - tag: "GET"
+  /system/reset:
+    post:
+      tags:
+      - "System"
+      description: "Resets the system immediately or at a sepcified time."
+      operationId: "controllers.default_controller.system_reset_post"
+      parameters:
+      - in: "formData"
+        name: "reset_type"
+        description: "The type of reset. Either SYS_REBOOT, WDOG or ALL_HW_OFF."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "System Reset"
+        405:
+          description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "System"
+      - tag: "POST"
+
+# --- ADCS
+  /adcs:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the ADCS status."
+      operationId: "controllers.default_controller.adcs_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/inline_response_200"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+  /adcs/state:
+    get:
+      tags:
+      - "ADCS"
+      description: "Return position/velocity/time based on best available data."
+      operationId: "controllers.default_controller.adcs_state_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/state"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+  /adcs/wheel/mode:
+    post:
+      tags:
+      - "ADCS"
+      description: "Sets the wheel mode."
+      operationId: "controllers.default_controller.adcs_wheel_mode_post"
+      parameters:
+      - in: "body"
+        name: "wheel_mode"
+        description: "ADCS Wheel Mode. 'mode' is one of ['IDLE', 'INTERNAL', 'EXTERNAL'], 'wheel' is one of ['ALL', '1', '2', '3', '4']."
+        required: true
+        schema:
+          $ref: "#/definitions/wheel_mode"
+      responses:
+        200:
+          description: "Wheel Mode Updated"
+        405:
+          description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "POST"
+  /adcs/attitude:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the attitude based on the best available data."
+      operationId: "controllers.default_controller.adcs_attitude_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/attitude"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+    post:
+      tags:
+      - "ADCS"
+      description: "Sets the target attitude."
+      operationId: "controllers.default_controller.adcs_attitude_post"
+      parameters:
+      - in: "body"
+        name: "attitude"
+        description: "Attitude with respect to ECI"
+        required: true
+        schema:
+          $ref: "#/definitions/attitude"
+      responses:
+        200:
+          description: "Attitude Updated"
+        405:
+          description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "POST"
+  /adcs/coarse_sun_sensor:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the coarse sun sensor data."
+      operationId: "controllers.default_controller.adcs_coarse_sun_sensor_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/inline_response_200_1"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+  /adcs/gps:
+    get:
+      tags:
+      - "ADCS"
+      description: "Gets the GPS status."
+      operationId: "controllers.default_controller.adcs_gps_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/inline_response_200_2"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - hasMore: "true"
+        tag: "GET"
+      - tag: "GPS"
+  /adcs/gps/state:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the position/velocity/time based on the GPS."
+      operationId: "controllers.default_controller.adcs_gps_state_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/state"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - hasMore: "true"
+        tag: "GET"
+      - tag: "GPS"
+  /adcs/propagator/attitude:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the attitude based on the propagator."
+      operationId: "controllers.default_controller.adcs_propagator_attitude_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/attitude"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+  /adcs/propagator/state:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the position/velocity/time based on the propagator."
+      operationId: "controllers.default_controller.adcs_propagator_state_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/state"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+  /adcs/star_tracker:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the star tracker status."
+      operationId: "controllers.default_controller.adcs_star_tracker_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            type: "object"
+            properties:
+              tracker_attitude_status:
+                type: "object"
+                properties:
+                  id:
+                    type: "number"
+                    format: "integer"
+                  text:
+                    type: "string"
+              tracker_rate_attitude_status:
+                type: "object"
+                properties:
+                  id:
+                    type: "number"
+                    format: "integer"
+                  text:
+                    type: "string"
+  /adcs/star_tracker/attitude:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the attitude based on the star tracker."
+      operationId: "controllers.default_controller.adcs_star_tracker_attitude_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/attitude"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - tag: "GET"
+
+# --- EPS
+  /eps:
+    get:
+      tags:
+      - "EPS"
+      description: "Returns EPS (Electronic Power System) status."
+      operationId: "controllers.default_controller.eps_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/inline_response_200_3"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+  /eps/battery:
+    get:
+      tags:
+      - "EPS"
+      description: "EPS (Electronic Power System) battery data."
+      operationId: "controllers.default_controller.eps_battery_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/inline_response_200_4"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+  /eps/bcr:
+    get:
+      tags:
+      - "EPS"
+      description: "Returns EPS (Electronic Power System) BCR data."
+      operationId: "controllers.default_controller.eps_bcr_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/inline_response_200_5"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+  /eps/current:
+    get:
+      tags:
+      - "EPS"
+      description: "Returns EPS (Electronic Power System) Current data."
+      operationId: "controllers.default_controller.eps_current_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/inline_response_200_6"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+  /eps/voltage:
+    get:
+      tags:
+      - "EPS"
+      description: "Returns EPS (Electronic Power System) Voltage data."
+      operationId: "controllers.default_controller.eps_voltage_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/inline_response_200_7"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+
+############################
+### Data Models
+############################
+definitions:
+  attitude:
+    type: "object"
+    properties:
+      eci_qx:
+        type: "number"
+        format: "double"
+      eci_qy:
+        type: "number"
+        format: "double"
+      eci_qz:
+        type: "number"
+        format: "double"
+      eci_qw:
+        type: "number"
+        format: "double"
+  state:
+    type: "object"
+    properties:
+      eci_x_km:
+        type: "number"
+        format: "double"
+      eci_y_km:
+        type: "number"
+        format: "double"
+      eci_z_km:
+        type: "number"
+        format: "double"
+      eci_dx_kms:
+        type: "number"
+        format: "double"
+      eci_dy_kms:
+        type: "number"
+        format: "double"
+      eci_dz_kms:
+        type: "number"
+        format: "double"
+      time:
+        type: "string"
+        format: "date-time"
+        title: "adcs_time"
+  wheel_mode:
+    type: "object"
+    properties:
+      wheel:
+        type: "string"
+        description: "either 'ALL', '1', '2', '3', or '4'"
+      mode:
+        type: "string"
+        description: "either 'IDLE', 'INTERNAL', or 'EXTERNAL'"
+  inline_response_200:
+    properties:
+      temperature:
+        type: "number"
+        format: "integer"
+        description: "ADCS temperature in celcius"
+      fault_count:
+        type: "number"
+        format: "integer"
+      adcs_mode:
+        type: "object"
+        properties:
+          id:
+            type: "number"
+            format: "integer"
+          text:
+            type: "string"
+  inline_response_200_1_status:
+    properties:
+      id:
+        type: "number"
+        format: "integer"
+      text:
+        type: "string"
+  inline_response_200_1:
+    properties:
+      sun_body_vector_1:
+        type: "number"
+        format: "double"
+      sun_body_vector_2:
+        type: "number"
+        format: "double"
+      sun_body_vector_3:
+        type: "number"
+        format: "double"
+      status:
+        $ref: "#/definitions/inline_response_200_1_status"
+  inline_response_200_2:
+    properties:
+      enabled:
+        type: "boolean"
+      valid:
+        type: "boolean"
+  inline_response_200_3_faults:
+    properties:
+      eps:
+        type: "number"
+        format: "integer"
+      battery:
+        type: "number"
+        format: "integer"
+  inline_response_200_3:
+    properties:
+      epsTemperatures:
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+      faults:
+        $ref: "#/definitions/inline_response_200_3_faults"
+  inline_response_200_4:
+    properties:
+      voltage:
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+          description: "Cell voltage."
+      temperature:
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+          description: "Cell temperature."
+  inline_response_200_5_output:
+    properties:
+      voltage:
+        type: "number"
+        format: "double"
+      current:
+        type: "number"
+        format: "double"
+  inline_response_200_5:
+    properties:
+      input:
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+          description: "BCR input voltage."
+      output:
+        $ref: "#/definitions/inline_response_200_5_output"
+  inline_response_200_6:
+    properties:
+      12V:
+        type: "number"
+        format: "double"
+        description: "Current of the system's 12V bus."
+      5V:
+        type: "number"
+        format: "double"
+        description: "Current of the system's 5V bus."
+      3V3:
+        type: "number"
+        format: "double"
+        description: "Current of the system's 3.3V bus."
+      battery:
+        type: "number"
+        format: "double"
+        description: "Current of the system's battery bus."
+  inline_response_200_7:
+    properties:
+      12V:
+        type: "number"
+        format: "double"
+        description: "Voltage of the system's 12V bus."
+      5V:
+        type: "number"
+        format: "double"
+        description: "Voltage of the system's 5V bus."
+      3V3:
+        type: "number"
+        format: "double"
+        description: "Voltage of the system's 3.3V bus."
+      battery:
+        type: "number"
+        format: "double"
+        description: "Voltage of the system's battery bus."
+  inline_response_200_8:
+    properties:
+      time:
+        type: "string"
+        format: "date-time"
+        description: "Current UTC bus time in ISO 8061 format."
+      temperature:
+        type: "number"
+        format: "double"
+        description: "Current micro-controller temperature in Celsius."
+      fault_count:
+        type: "number"
+        format: "integer"
+        description: "Number of faults experienced by the system."

@@ -1,0 +1,10 @@
+[Unit]
+Description=HTTP interface to the SUPERNVOA Bus
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/http_api/http_api.sh
+
+[Install]
+WantedBy=multi-user.target
