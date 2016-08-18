@@ -1,0 +1,382 @@
+/**################################################################################
+#(C) Copyright Pumpkin, Inc. All Rights Reserved.
+#
+#This file may be distributed under the terms of the License
+#Agreement provided with this software.
+#
+#THIS FILE IS PROVIDED AS IS WITH NO WARRANTY OF ANY KIND,
+#INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND
+#FITNESS FOR A PARTICULAR PURPOSE.
+################################################################################*/
+
+@import "fontawesome/font-awesome";
+@import 'https://fonts.googleapis.com/css?family=Roboto:300';
+
+
+@font-face{
+  font-family: Raleway;
+  src: url(../fonts/Raleway-Light.ttf);
+}
+
+$orange: #f39c12;
+$blue: #3498db;
+$dblue: #2980b9;
+
+html{
+  margin:0;
+  padding:0;
+}
+
+body{
+  background-color: #d5d5d5;
+  overflow: auto;
+}
+
+/*#sidebar{
+  width:15%;
+  height:100%;
+  float: left;
+  display: inline-block;
+
+  background-color: #2C3E50;
+}
+
+#logo{
+  width:100%;
+  text-align: center;
+  background-color: $orange;
+  overflow:auto;
+
+  h1{
+    width:100%;
+  }
+}
+
+#nav{
+  width: 100%;
+  padding-top: 30px;
+
+  ul{
+    width: 100%;
+    list-style-type: none;
+    list-style-position:inside;
+    margin:0;
+    padding:0;
+
+    li{
+      width:70%;
+      margin-left: 15%;
+      color: #fff;
+      list-style-type: none;
+      list-style-position:inside;
+
+      h5{
+        padding: 0;
+        margin:0;
+        margin-left:10px;
+        //float: right;
+      }
+
+      span, h5{
+        display:inline-block;
+        vertical-align: middle;
+      }
+
+      a{
+        color: #fff;
+        text-decoration: none;
+
+        &:hover{
+          color: $orange;
+        }
+      }
+    }
+  }
+}
+*/
+
+@font-face {
+	font-family: 'ecoico';
+	src:url('../fonts/ecoico.eot');
+	src:url('../fonts/ecoico.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+/* Menu */
+.cbp-vimenu {
+	position: fixed;
+	overflow: hidden;
+	top: 0;
+	left: 0;
+	height: 100%;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	background: #f7f7f7;
+}
+
+.cbp-vimenu li a {
+	display: block;
+	text-indent: -500em;
+	height: 5em;
+	width: 5em;
+	line-height: 5em;
+	text-align: center;
+	color: #999;
+	position: relative;
+	border-bottom: 1px solid rgba(0,0,0,0.05);
+	-webkit-transition: background 0.1s ease-in-out;
+	-moz-transition: background 0.1s ease-in-out;
+	transition: background 0.1s ease-in-out;
+}
+
+.cbp-vimenu li a:hover,
+.cbp-vimenu li:first-child a{
+	background: $orange;
+	color: #fff;
+}
+
+/* class for current item */
+.cbp-vimenu li.cbp-vicurrent a {
+	background: #fff;
+	color: $orange;
+}
+
+.cbp-vimenu li a:before {
+	font-family: 'FontAwesome';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	text-indent: 0em;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	font-size: 1.4em;
+	-webkit-font-smoothing: antialiased;
+}
+
+.cbp-vimenu li a.icon-logo:before {
+	content: "S";
+	font-weight: 700;
+	font-size: 300%;
+	font-family: 'Raleway', Calibri, Arial, sans-serif;
+}
+
+.icon-dashboard:before {
+	content: "\f0e4";
+}
+
+.icon-system:before {
+	content: "\f120";
+}
+
+.icon-adcs:before {
+	content: "\f14e";
+}
+
+.icon-eps:before {
+	content: "\f241";
+}
+
+.icon-radio:before {
+	content: "\f012";
+}
+
+
+
+
+#content{
+  width:95%;
+  min-height: 100%;
+  float: right;
+  display: inline-block;
+
+  #inner{
+    margin-top: 2.5%;
+  }
+}
+
+/* Card Class */
+.card {
+  padding:1.5rem;
+  box-shadow:0 1px 2px #aaa;
+  background:white;
+  margin:0 1rem 1rem;
+  border-radius:3px;
+  display: inline-block;
+  width:300px;
+  vertical-align: top;
+
+  span,h1{
+    vertical-align: middle;
+  }
+
+  h1{
+    margin:0;
+    display:inline-block;
+  }
+
+  i{
+    display: inline-block;
+    float: right;
+    color: $blue;
+
+    &:hover{
+      color: $dblue;
+    }
+  }
+
+  .boxed{
+    margin: 0 .66%;
+    padding: 0px 1.66%;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    display: inline-block;
+    width: 17%;
+    text-align: center;
+    width: 18.66%;
+
+    input{
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      height: auto;
+      padding: 0;
+      margin-top: 3px;
+      margin-bottom: 3px;
+      width: 100%;
+      border: none;
+      text-align: center;
+
+      &:focus{
+        border:none;
+      }
+    }
+
+
+
+  }
+
+  canvas{
+      width: 300px;
+      height: 300px;
+    }
+
+  textarea{
+    width:300px;
+    max-height: 300px;
+    border: 1px solid $orange;
+    resize: none;
+  }
+
+  input{
+    height: auto;
+    padding: 0;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    width: 300px;
+    border: none;
+    border: 1px solid $orange;
+    border-radius:3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    &:focus{
+      border:none;
+    }
+  }
+}
+
+.dataLine{
+  margin: 0 2px;
+  padding: 0px 5px;
+  border: 1px solid #ddd;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+  display: inline-block;
+  width: 286px;
+  margin-bottom: 5px;
+
+  span{
+    float: right;
+  }
+}
+
+.data-item{
+  p{
+    display: inline-block;
+    margin-bottom: 5px;;
+  }
+
+  div{
+    display: inline-block;
+    float: right;
+  }
+}
+
+.warning{
+  margin: 0 2px;
+  padding: 0px 5px;
+  border: 1px solid #ddd;
+  background-color: #f2dede;
+  border-radius: 3px;
+  text-align: center;
+  color: #d9534f;
+  margin-bottom: 10px;
+}
+
+.ob{
+  border: 1px solid $orange !important;
+}
+
+#moreButton{
+  color: $orange;
+}
+
+#map{
+  width: 100%;
+  height: 300px;
+}
+
+#mapFullscreen{
+  margin-top:5px;
+  float:right;
+}
+
+.modal{
+  z-index: 9000;
+  width: 100% !important;
+  height: 100% !important;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  background-color: rgba(0,0,0,.6);
+}
+
+.fullscreen{
+    z-index: 9900 !important;
+    width: 95% !important;
+    height: 95% !important;
+    position: fixed !important;
+    top: 2.5%;
+    left: 2.5%;
+ }
+
+.fullscreen-button{
+  z-index: 9999 !important;
+  position: fixed !important;
+  right: 4%;
+  bottom: 4%;
+}
+
+.wide{
+  width: 650px;
+
+  canvas{
+    width: 650px;
+    height: 650px;
+  }
+}

@@ -1,0 +1,39 @@
+
+<script src="http://www.babylonjs.com/babylon.js"></script>
+<script>
+
+
+  $(document).ready(function(){
+    resize();
+  })
+
+  $('textarea').textareaAutoSize(function(){
+    resize();
+  });
+
+  $(window).scroll(function(){
+    resize();
+  });
+
+  $(window).on('resize', function(){
+    resize();
+  });
+
+  function resize(){
+    $('#sidebar').height($('#content').height());
+
+    var window_width = $('#content').width();
+    var columns = Math.floor(window_width/350);
+    $('#inner').width((columns*350));
+    $('#inner').css('margin-left',(window_width-$('#inner').width())/2+'px');
+
+  }
+</script>
+
+<% include scripts/grid %>
+
+<% include scripts/orbit-graphic %>
+
+<% include scripts/map %>
+
+<% include scripts/chart %>

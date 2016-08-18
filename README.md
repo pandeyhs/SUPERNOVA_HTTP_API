@@ -14,6 +14,26 @@ The contents of this file can be run through the [Swagger Editor](http://editor.
 to get a formatted API document.
 
 ----
+
+## Installation:
+
+From the top level folder:
+
+```
+sudo make install
+```
+
+This will install the application and start the HTTP server automatically after
+boot, provided the Linux OS is running systemd.
+
+To uninstall
+```
+sudo make uninstall
+```
+
+HTTP requests are served over localhost:9000.
+
+----
 ## Usage
 
 The API can be accessed on `0.0.0.0:9000`.
@@ -93,6 +113,16 @@ To remove all log files, run:
 ```
 rm -rf /opt/http_api/logs
 ```
+
+----
+
+### Graphical UI Example
+
+A UI interface to the Bus is provided in examples/ui that commands and pulls
+data from the Bus over HTTP. See examples/ui/README.md for more information
+about the UI.
+
+For more about the HTTP interface, see [docs/http_api.md](docs/http_api.md)...
 
 ---
 

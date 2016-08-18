@@ -1,0 +1,24 @@
+<% if(view == "c&dh") { %>
+  <div class="card" id="time" ng-controller="timeController">
+    <h1>System Time</h1>
+    <br>
+    <h5 style="margin:0">{{time}}</h5>
+  </div>
+
+  <div class="card" id="cdh-faults" ng-controller="cdhFaultController">
+    <h1>Faults</h1>
+    <br>
+    <div class="data-item">
+      <p>System Fault Count</p><div class="boxed">{{systemFaultCount | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="cdh-temps" ng-controller="tempController">
+    <h1>Temperatures</h1>
+    <br>
+    <div class="data-item">
+      <p>MicroController</p><div class="boxed">{{tempMC | limitTo:7}} °C</div>
+    </div>
+  </div>
+  <script src="js/core.js"></script>
+<% } %>

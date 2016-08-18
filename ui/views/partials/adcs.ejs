@@ -1,0 +1,133 @@
+<% if(view == "adcs") { %>
+  <div class="card" id="adacsReference" ng-controller="adcsController">
+    <h1>Propagation</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>ECEF ECI QX</p><div class="boxed">{{propagation_attitude.eci_qx | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>ECEF ECI QY</p><div class="boxed">{{propagation_attitude.eci_qy | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>ECEF ECI QZ</p><div class="boxed">{{propagation_attitude.eci_qz | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>ECEF ECI QW</p><div class="boxed">{{propagation_attitude.eci_qw | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>Position X</p><div class="boxed">{{propagation_position.eci_x_km | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Position Y</p><div class="boxed">{{propagation_position.eci_y_km | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Position Z</p><div class="boxed">{{propagation_position.eci_z_km | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>Velocity ECI dX</p><div class="boxed">{{propagation_velocity.eci_dy_kms | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Velocity ECI dY</p><div class="boxed">{{propagation_velocity.eci_dy_kms | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Velocity ECI dZ</p><div class="boxed">{{propagation_velocity.eci_dy_kms | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="power" ng-controller="adcsController">
+    <h1>Star Tracker</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>Attitude QX</p><div class="boxed">{{star_tracker_attitude.eci_qx | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Attitude QY</p><div class="boxed">{{star_tracker_attitude.eci_qy | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Attitude QZ</p><div class="boxed">{{star_tracker_attitude.eci_qz | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Attitude QW</p><div class="boxed">{{star_tracker_attitude.eci_qw | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>Rate Estimation Status</p><div class="boxed">{{star_tracker_status.tracker_attitude_status.text | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Attitude Status</p><div class="boxed">{{tracker_attitude_status.tracker_rate_attitude_status.text | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="power" ng-controller="adcsController">
+    <h1>Coarse Sun Sensor</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>Sun Vector Body 1</p><div class="boxed">{{coarse_sun_sensor.sun_body_vector_1 | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Sun Vector Body 2</p><div class="boxed">{{coarse_sun_sensor.sun_body_vector_2 | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Sun Vector Body 3</p><div class="boxed">{{coarse_sun_sensor.sun_body_vector_3 | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>Sun Vector Status</p><div class="boxed">{{coarse_sun_sensor.status.id | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="power" ng-controller="adcsController">
+    <h1>GPS</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>GPS Valid</p><div class="boxed">{{gps_status.valid | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>GPS Enabled</p><div class="boxed">{{gps_status.enabled | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>GPS Position ECEF 1</p><div class="boxed">{{gps_position.eci_x_km | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>GPS Position ECEF 2</p><div class="boxed">{{gps_position.eci_y_km | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>GPS Position ECEF 3</p><div class="boxed">{{gps_position.eci_z_km | limitTo:7}}</div>
+    </div>
+    <br>
+    <div class="data-item">
+      <p>GPS Velocity ECEF 1</p><div class="boxed">{{gps_velocity.eci_dx_kms | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>GPS Velocity ECEF 2</p><div class="boxed">{{gps_velocity.eci_dy_kms | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>GPS Velocity ECEF 3</p><div class="boxed">{{gps_velocity.eci_dz_kms | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="power" ng-controller="adcsController">
+    <h1>ADCS Status</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>Mode</p><div class="boxed">{{adcs_status.adcs_mode.text | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Fault Count</p><div class="boxed">{{adcs_status.fault_count | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Temperature</p><div class="boxed">{{adcs_status.temperature | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>Time</p><div class="boxed">{{adcs_time.time | limitTo:7}}</div>
+    </div>
+  </div>
+<% } %>

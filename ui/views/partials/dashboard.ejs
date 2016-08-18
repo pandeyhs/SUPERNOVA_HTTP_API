@@ -1,0 +1,104 @@
+<% if(view == "dashboard") { %>
+  <div class="card" id="time" ng-controller="timeController">
+    <h1> System Time</h1>
+    <br>
+    <br>
+    <h5>{{time}}</h5>
+  </div>
+
+  <div class="card" id="cdh-temps" ng-controller="tempController">
+    <h1>Temperatures</h1>
+    <br>
+    <div class="data-item">
+      <p>MicroController</p><div class="boxed">{{tempMC | limitTo:7}} °C</div>
+    </div>
+  </div>
+
+   <div class="card" id="power" ng-controller="powerController">
+    <h1 ng-style="powerStyle">Power</h1>
+    <span>
+      <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+    </span>
+    <br>
+    <br>
+    <div >
+      <canvas id="powerChart" class="chart chart-line" chart-data="data"
+chart-labels="labels" chart-series="series" chart-options="options"
+chart-dataset-override="datasetOverride" chart-click="onClick"
+      </canvas>
+    </div>
+  <br>
+    <div>
+      <div class="boxed">{{current | limitTo:7}}</div>
+      <div class="boxed">mA</div>
+    </div>
+    <div>
+      <div class="boxed">{{voltage | number : 3}}</div>
+      <div class="boxed">V</div>
+    </div>
+
+    <br>
+    <h5>Resets</h5>
+    <br>
+    <button class="button" ng-click="reset()">Reset</button>
+  </div>
+
+  <div class="card" id="orbit" ng-controller="orbitController">
+    <h1>Orbital State</h1>
+    <span>
+      <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+    </span>
+    <br>
+    <br>
+    <div id="map"></div>
+    <br>
+    <div>
+      <div class="boxed">{{x | limitTo:7}}</div>
+      <div class="boxed">{{y | limitTo:7}}</div>
+      <div class="boxed">{{z | limitTo:7}}</div>
+      <div class="boxed">km</div>
+    </div>
+    <div>
+      <div class="boxed">{{dx | limitTo:7}}</div>
+      <div class="boxed">{{dy | limitTo:7}}</div>
+      <div class="boxed">{{dz | limitTo:7}}</div>
+      <div class="boxed">km/s</div>
+    </div>
+    <br>
+
+  </div>
+
+  <div class="card" id="orbit-attitude" ng-controller="orbitController">
+    <h1>Orbital Attitude</h1>
+    <span>
+      <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+    </span>
+    <br>
+    <br>
+    <canvas id="orbit-graphic">
+
+    </canvas>
+    <br>
+    <br>
+
+    <div>
+      <div class="boxed">{{qw | limitTo:7}}</div>
+      <div class="boxed">{{qx | limitTo:7}}</div>
+      <div class="boxed">{{qy | limitTo:7}}</div>
+      <div class="boxed">{{qz | limitTo:7}}</div>
+    </div>
+
+    <br>
+
+    <form ng-submit="submitAttitude()">
+      <div>
+        <div class="boxed ob"><input ng-model="eci_qw" type="text" placeholder="qw"/></div>
+        <div class="boxed ob"><input ng-model="eci_qx" type="text" placeholder="qx"/></div>
+        <div class="boxed ob"><input ng-model="eci_qy" type="text" placeholder="qy"/></div>
+        <div class="boxed ob"><input ng-model="eci_qz" type="text" placeholder="qz"/></div>
+      </div>
+      <br>
+      <div><input type="submit" /></div>
+    </form>
+  </div>
+<% } %>

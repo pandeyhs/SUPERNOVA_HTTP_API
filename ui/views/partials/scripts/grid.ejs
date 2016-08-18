@@ -1,0 +1,35 @@
+<script>
+  var $grid = $('.grid').packery({
+    // options
+    itemSelector: '.card',
+    gutter: 0,
+    columnWidth: 350
+  });
+
+  $('.grid').find('.card').each( function( i, gridItem ) {
+    var draggie = new Draggabilly( gridItem );
+    // bind drag events to Packery
+    $('.grid').packery( 'bindDraggabillyEvents', draggie );
+
+    draggie.on( 'dragEnd',  function(){
+      console.log("hello");
+      resize();
+    });
+  });
+
+  $('.fa-arrows-alt').on( 'click', function( event ) {
+    var $item = $( event.currentTarget ).parent().parent();
+    // change size of item by toggling large class
+    $item.toggleClass('wide');
+    if ( $item.is('.wide') ) {
+      // fit large item
+
+      $grid.packery( 'fit', $(event.currentTarget).parent().parent().get(0) );
+      $grid.packery('shiftLayout');
+    } else {
+      // back to small, shiftLayout back
+
+      $grid.packery('shiftLayout');
+    }
+  });
+</script>

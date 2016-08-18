@@ -1,0 +1,70 @@
+<script>
+  var map = new L.Map('map');
+
+  var mbt = MBTiles.load(
+  '/mbtiles/control-room.mbtiles',
+  function(me) {
+    var centerVal = me.metadata('center').split(",");
+    var boundVal  = me.metadata('bounds').split(",");
+    var bounds    = new L.LatLngBounds( new L.LatLng(boundVal[1],boundVal[0]), new L.LatLng(boundVal[3],boundVal[2]) );
+    console.log(boundVal);
+    var MBLayer = L.TileLayer.extend({
+      options: {
+        minZoom: 0,
+        maxZoom: 8,
+        tileSize: 256,
+        tms: false,
+        errorTileUrl: '',
+        attribution: me.metadata('attribution'),
+        zoomOffset: 0,
+        opacity: 1,
+        bounds: bounds,
+        continuousWorld: true,
+        unloadInvisibleTiles: L.Browser.mobile,
+        updateWhenIdle: L.Browser.mobile
+      },
+      getTileUrl: function (tilePoint) {
+        this._adjustTilePoint(tilePoint);
+        var tile = me.getTileImage(tilePoint.x, tilePoint.y, this._getZoomForUrl());
+        return tile;
+      }
+    });
+
+    var MBLayerObj = new MBLayer('dummy',{tms:true});
+
+    console.log(me.metadata('minzoom'));
+    map.addLayer(MBLayerObj);
+    console.log(centerVal);
+    //map.setView(new L.LatLng(parseFloat(centerVal[1]),parseFloat(centerVal[0])),parseInt(centerVal[2]));
+    map.fitBounds(bounds);
+  });
+
+  window.lattitude = 0;
+  window.lattitude = 0;
+
+  console.log([window.lattitude, window.lattitude]);
+
+  var snovaIcon = L.icon({
+      iconUrl: 'js/images/snova.png',
+      iconRetinaUrl: 'js/images/snova-2x.png',
+      shadowUrl: 'js/images/snova-shadow.png',
+      shadowRetinaUrl: 'js/images/snova-shadow-2x.png',
+      iconSize: [64, 77],
+      iconAnchor: [0, 0],
+      shadowSize: [45, 35],
+      shadowAnchor: [-12, -34],
+      popupAnchor: [-3, -76]
+  });
+
+  var marker = L.marker([window.lattitude, window.lattitude],
+          {icon: snovaIcon})
+          .addTo(map);
+
+  function updateMarker(){
+    marker.setLatLng([window.lattitude, window.lattitude]).update();
+    //var cM = map.project(marker._latlng);
+    //map.setView(map.unproject(cM),2,{animate: false});
+  }
+
+  window.setInterval(function(){updateMarker();}, 1000);
+</script>

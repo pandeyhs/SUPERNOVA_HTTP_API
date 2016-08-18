@@ -1,0 +1,49 @@
+<html >
+  <head>
+    <% include partials/head %>
+  </head>
+
+
+
+  <body ng-app="supernova">
+    <header>
+      <% include partials/header %>
+    </header>
+
+    <main ng-controller="controller">
+      <% include partials/sidebar %>
+
+      <div id="content">
+        <div class="grid" id="inner">
+
+          <div class="card" id="time" ng-controller="timeController">
+            <h1>Drag Me!</h1>
+            <br>
+            <br>
+            <p>Welcome to the Supernova Satellite Bus control panel.</p>
+          </div>
+
+          <% include partials/dashboard %>
+
+          <% include partials/adcs %>
+
+          <% include partials/c&dh %>
+
+          <% include partials/eps %>
+
+          <% include partials/settings %>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <% include partials/footer %>
+    </footer>
+
+
+    <% include partials/script %>
+
+    <script src="js/core.js"></script>
+
+  </body>
+</html>

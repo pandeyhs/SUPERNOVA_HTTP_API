@@ -1,0 +1,93 @@
+<% if(view == "eps"){ %>
+  <div class="card" id="epsStatus" ng-controller="epsController">
+    <h1>EPS Status</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>EPS Temperature 1</p><div class="epsBoxed">{{status.epsTemperatures[0] | limitTo:7}} °C</div>
+    </div>
+    <div class="data-item">
+      <p>EPS Temperature 2</p><div class="epsBoxed">{{status.epsTemperatures[1] | limitTo:7}} °C</div>
+    </div>
+    <div class="data-item">
+      <p>Battery Faults</p><div class="epsBoxed">{{status.faults.battery | limitTo:7}}</div>
+    </div>
+    <div class="data-item">
+      <p>EPS Faults</p><div class="epsBoxed">{{status.faults.eps | limitTo:7}}</div>
+    </div>
+  </div>
+
+  <div class="card" id="epsBattery" ng-controller="epsController">
+    <h1>Battery</h1>
+    <br>
+    <br>
+    <h5>Temperatures</h5>
+    <br>
+    <div class="data-item" ng-repeat="temp in battery.temperature track by $index">
+      <p>Cell {{$index}} Temperature</p><div class="epsBoxed">{{temp | limitTo:5}} °C</div>
+    </div>
+    <br>
+    <h5>Voltages</h5>
+    <br>
+    <div class="data-item" ng-repeat="volt in battery.voltage track by $index">
+      <p>Cell {{$index}} Voltage</p><div class="epsBoxed">{{volt | limitTo:5}} V</div>
+    </div>
+  </div>
+
+  <div class="card" id="epsBCR" ng-controller="epsController">
+    <h1>BCR</h1>
+    <br>
+    <br>
+    <h5>Input Voltages</h5>
+    <br>
+    <div class="data-item" ng-repeat="volt in bcr.input">
+      <p>BCR {{$index + 1}}</p><div class="epsBoxed">{{volt | limitTo:5}} V</div>
+    </div>
+    <br>
+    <h5>Output</h5>
+    <br>
+    <div class="data-item">
+      <p>Voltage</p><div class="epsBoxed">{{bcr.output.voltage | limitTo:5}} V</div>
+    </div>
+    <div class="data-item">
+      <p>Current</p><div class="epsBoxed">{{bcr.output.current | limitTo:5}} mAh</div>
+    </div>
+  </div>
+
+  <div class="card" id="epsVoltage" ng-controller="epsController">
+    <h1>System Voltages</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>3V3</p><div class="epsBoxed">{{voltage["3V3"] | limitTo:5}} V</div>
+    </div>
+    <div class="data-item">
+      <p>5V</p><div class="epsBoxed">{{voltage["5V"] | limitTo:5}} V</div>
+    </div>
+    <div class="data-item">
+      <p>12V</p><div class="epsBoxed">{{voltage["12V"] | limitTo:5}} V</div>
+    </div>
+    <div class="data-item">
+      <p>Battery Voltage</p><div class="epsBoxed">{{voltage.battery | limitTo:5}} V</div>
+    </div>
+  </div>
+
+  <div class="card" id="epsVoltage" ng-controller="epsController">
+    <h1>System Current</h1>
+    <br>
+    <br>
+    <div class="data-item">
+      <p>3V3</p><div class="epsBoxed">{{current["3V3"] | limitTo:5}} A</div>
+    </div>
+    <div class="data-item">
+      <p>5V</p><div class="epsBoxed">{{current["5V"] | limitTo:5}} A</div>
+    </div>
+    <div class="data-item">
+      <p>12V</p><div class="epsBoxed">{{current["12V"] | limitTo:5}} A</div>
+    </div>
+    <div class="data-item">
+      <p>Battery Amps</p><div class="boxed">{{current.battery | limitTo:5}} A</div>
+    </div>
+  </div>
+
+<% } %>
