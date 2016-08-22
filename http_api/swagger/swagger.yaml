@@ -14,7 +14,7 @@ swagger: "2.0"
 ### API Information
 ############################
 info:
-  version: "0.2"
+  version: "0.1"
   title: "SUPERNOVA ReST API"
 
 ############################
