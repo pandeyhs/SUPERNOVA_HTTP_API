@@ -14,7 +14,7 @@ Run unit tests on http default_controller.
 """
 
 import unittest
-from .context import default_controller, core_services
+from .context import default_controller
 
 class TestAPI(unittest.TestCase):
   """Test the HTTP endpoints."""
