@@ -1,10 +1,6 @@
 test:
 	nosetests -v
 
-docker-test:
-	sudo docker build -t my_container .
-	sudo docker run -P my_container
-
 install:
 	pip install -r requirements.txt
 	cp -r http_api /opt/http_api

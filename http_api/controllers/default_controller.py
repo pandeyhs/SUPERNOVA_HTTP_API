@@ -362,14 +362,14 @@ def eps_battery_get():
     soh = _read_soh()
     eps_battery = {
         'temperature': [
-            soh['BAT_0_BAT_V'],
-            soh['BAT_1_BAT_V'],
-            soh['BAT_2_BAT_V']
-        ],
-        'voltage': [
             soh['BAT_0_TEMP'],
             soh['BAT_1_TEMP'],
             soh['BAT_2_TEMP']
+        ],
+        'voltage': [
+            soh['BAT_0_BAT_V'],
+            soh['BAT_1_BAT_V'],
+            soh['BAT_2_BAT_V']
         ]
     }
     return eps_battery

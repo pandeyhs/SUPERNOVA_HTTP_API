@@ -14,13 +14,12 @@ swagger: "2.0"
 ### API Information
 ############################
 info:
-  version: "0.2"
+  version: "0.3"
   title: "SUPERNOVA ReST API"
 
 ############################
 ### Protocol
 ############################
-#basePath: /v0
 schemes:
 - "http"
 - "https"
@@ -46,7 +45,7 @@ paths:
         200:
           description: "Successful Response"
           schema:
-            $ref: "#/definitions/inline_response_200_8"
+            $ref: "#/definitions/system_data"
       x-tags:
       - hasMore: "true"
         tag: "System"
@@ -73,6 +72,120 @@ paths:
         tag: "System"
       - tag: "POST"
 
+# --- BIM
+  /bim:
+    get:
+      tags:
+      - "BIM"
+      description: "Bus Interface Module SCPI status."
+      operationId: "controllers.default_controller.bim_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/bim_status"
+      x-tags:
+      - hasMore: "true"
+        tag: "BIM"
+      - tag: "GET"
+    post:
+      tags:
+      - "BIM"
+      description: "Send SCPI command to BIM"
+      operationId: "controllers.default_controller.bim_post"
+      parameters:
+      - in: "body"
+        name: "scpi_command"
+        description: "Complete SCPI command as ASCII string."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "SCPI command sent"
+        405:
+          description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "BIM"
+      - tag: "POST"
+
+# --- PIM
+  /bim:
+    get:
+      tags:
+      - "PIM"
+      description: "Payload Interface Module SCPI status."
+      operationId: "controllers.default_controller.pim_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/pim_status"
+      x-tags:
+      - hasMore: "true"
+        tag: "PIM"
+      - tag: "GET"
+    post:
+      tags:
+      - "PIM"
+      description: "Send SCPI command to PIM"
+      operationId: "controllers.default_controller.pim_post"
+      parameters:
+      - in: "body"
+        name: "scpi_command"
+        description: "Complete SCPI command as ASCII string."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "SCPI command sent"
+        405:
+          description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "PIM"
+      - tag: "POST"
+
+# --- GPS
+  /gps:
+    get:
+      tags:
+      - "ADCS"
+      description: "Gets the GPS status."
+      operationId: "controllers.default_controller.gps_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/gps_status"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - hasMore: "true"
+        tag: "GET"
+      - tag: "GPS"
+  /gps/state:
+    get:
+      tags:
+      - "ADCS"
+      description: "Returns the position/velocity/time based on the GPS."
+      operationId: "controllers.default_controller.gps_state_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response"
+          schema:
+            $ref: "#/definitions/state"
+      x-tags:
+      - hasMore: "true"
+        tag: "ADCS"
+      - hasMore: "true"
+        tag: "GET"
+      - tag: "GPS"
+
 # --- ADCS
   /adcs:
     get:
@@ -85,7 +198,7 @@ paths:
         200:
           description: "Successful Response"
           schema:
-            $ref: "#/definitions/inline_response_200"
+            $ref: "#/definitions/adcs_status"
       x-tags:
       - hasMore: "true"
         tag: "ADCS"
@@ -176,47 +289,11 @@ paths:
         200:
           description: "Successful Response"
           schema:
-            $ref: "#/definitions/inline_response_200_1"
+            $ref: "#/definitions/coarse_sun_sensor_data"
       x-tags:
       - hasMore: "true"
         tag: "ADCS"
       - tag: "GET"
-  /adcs/gps:
-    get:
-      tags:
-      - "ADCS"
-      description: "Gets the GPS status."
-      operationId: "controllers.default_controller.adcs_gps_get"
-      parameters: []
-      responses:
-        200:
-          description: "Successful Response"
-          schema:
-            $ref: "#/definitions/inline_response_200_2"
-      x-tags:
-      - hasMore: "true"
-        tag: "ADCS"
-      - hasMore: "true"
-        tag: "GET"
-      - tag: "GPS"
-  /adcs/gps/state:
-    get:
-      tags:
-      - "ADCS"
-      description: "Returns the position/velocity/time based on the GPS."
-      operationId: "controllers.default_controller.adcs_gps_state_get"
-      parameters: []
-      responses:
-        200:
-          description: "Successful Response"
-          schema:
-            $ref: "#/definitions/state"
-      x-tags:
-      - hasMore: "true"
-        tag: "ADCS"
-      - hasMore: "true"
-        tag: "GET"
-      - tag: "GPS"
   /adcs/propagator/attitude:
     get:
       tags:
@@ -307,23 +384,7 @@ paths:
         200:
           description: "Successful Response."
           schema:
-            $ref: "#/definitions/inline_response_200_3"
-      x-tags:
-      - hasMore: "true"
-        tag: "EPS"
-      - tag: "GET"
-  /eps/battery:
-    get:
-      tags:
-      - "EPS"
-      description: "EPS (Electronic Power System) battery data."
-      operationId: "controllers.default_controller.eps_battery_get"
-      parameters: []
-      responses:
-        200:
-          description: "Successful Response."
-          schema:
-            $ref: "#/definitions/inline_response_200_4"
+            $ref: "#/definitions/eps_status"
       x-tags:
       - hasMore: "true"
         tag: "EPS"
@@ -339,7 +400,7 @@ paths:
         200:
           description: "Successful Response."
           schema:
-            $ref: "#/definitions/inline_response_200_5"
+            $ref: "#/definitions/eps_bcr_data"
       x-tags:
       - hasMore: "true"
         tag: "EPS"
@@ -355,7 +416,7 @@ paths:
         200:
           description: "Successful Response."
           schema:
-            $ref: "#/definitions/inline_response_200_6"
+            $ref: "#/definitions/eps_current_data"
       x-tags:
       - hasMore: "true"
         tag: "EPS"
@@ -371,7 +432,25 @@ paths:
         200:
           description: "Successful Response."
           schema:
-            $ref: "#/definitions/inline_response_200_7"
+            $ref: "#/definitions/eps_voltage_data"
+      x-tags:
+      - hasMore: "true"
+        tag: "EPS"
+      - tag: "GET"
+
+# --- Battery
+  /battery:
+    get:
+      tags:
+      - "EPS"
+      description: "EPS (Electronic Power System) battery data."
+      operationId: "controllers.default_controller.battery_get"
+      parameters: []
+      responses:
+        200:
+          description: "Successful Response."
+          schema:
+            $ref: "#/definitions/battery_data"
       x-tags:
       - hasMore: "true"
         tag: "EPS"
@@ -430,7 +509,7 @@ definitions:
       mode:
         type: "string"
         description: "either 'IDLE', 'INTERNAL', or 'EXTERNAL'"
-  inline_response_200:
+  adcs_status:
     properties:
       temperature:
         type: "number"
@@ -447,14 +526,14 @@ definitions:
             format: "integer"
           text:
             type: "string"
-  inline_response_200_1_status:
+  coarse_sun_sensor_data_status:
     properties:
       id:
         type: "number"
         format: "integer"
       text:
         type: "string"
-  inline_response_200_1:
+  coarse_sun_sensor_data:
     properties:
       sun_body_vector_1:
         type: "number"
@@ -466,14 +545,14 @@ definitions:
         type: "number"
         format: "double"
       status:
-        $ref: "#/definitions/inline_response_200_1_status"
-  inline_response_200_2:
+        $ref: "#/definitions/coarse_sun_sensor_data_status"
+  gps_status:
     properties:
       enabled:
         type: "boolean"
       valid:
         type: "boolean"
-  inline_response_200_3_faults:
+  eps_status_faults:
     properties:
       eps:
         type: "number"
@@ -481,7 +560,7 @@ definitions:
       battery:
         type: "number"
         format: "integer"
-  inline_response_200_3:
+  eps_status:
     properties:
       epsTemperatures:
         type: "array"
@@ -489,8 +568,8 @@ definitions:
           type: "number"
           format: "double"
       faults:
-        $ref: "#/definitions/inline_response_200_3_faults"
-  inline_response_200_4:
+        $ref: "#/definitions/eps_status_faults"
+  eps_battery_data:
     properties:
       voltage:
         type: "array"
@@ -504,7 +583,7 @@ definitions:
           type: "number"
           format: "double"
           description: "Cell temperature."
-  inline_response_200_5_output:
+  eps_bcr_data_output:
     properties:
       voltage:
         type: "number"
@@ -512,7 +591,7 @@ definitions:
       current:
         type: "number"
         format: "double"
-  inline_response_200_5:
+  eps_bcr_data:
     properties:
       input:
         type: "array"
@@ -521,8 +600,8 @@ definitions:
           format: "double"
           description: "BCR input voltage."
       output:
-        $ref: "#/definitions/inline_response_200_5_output"
-  inline_response_200_6:
+        $ref: "#/definitions/eps_bcr_data_output"
+  eps_current_data:
     properties:
       12V:
         type: "number"
@@ -540,7 +619,7 @@ definitions:
         type: "number"
         format: "double"
         description: "Current of the system's battery bus."
-  inline_response_200_7:
+  eps_voltage_data:
     properties:
       12V:
         type: "number"
@@ -558,7 +637,7 @@ definitions:
         type: "number"
         format: "double"
         description: "Voltage of the system's battery bus."
-  inline_response_200_8:
+  system_data:
     properties:
       time:
         type: "string"
