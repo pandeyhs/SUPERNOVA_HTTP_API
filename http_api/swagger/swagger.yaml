@@ -65,8 +65,22 @@ paths:
       responses:
         200:
           description: "System Reset"
-        405:
+        400:
           description: "Invalid input"
+      x-tags:
+      - hasMore: "true"
+        tag: "System"
+      - tag: "POST"
+
+  /system/noop:
+    post:
+      tags:
+      - "System"
+      description: "No operation command."
+      operationId: "controllers.default_controller.system_noop_post"
+      responses:
+        200:
+          description: "NOOP Accepted"
       x-tags:
       - hasMore: "true"
         tag: "System"
@@ -95,15 +109,15 @@ paths:
       description: "Send SCPI command to BIM"
       operationId: "controllers.default_controller.bim_post"
       parameters:
-      - in: "body"
-        name: "scpi_command"
+      - in: "formData"
+        name: "bim_scpi_command"
         description: "Complete SCPI command as ASCII string."
         required: true
         type: "string"
       responses:
         200:
           description: "SCPI command sent"
-        405:
+        400:
           description: "Invalid input"
       x-tags:
       - hasMore: "true"
@@ -111,7 +125,7 @@ paths:
       - tag: "POST"
 
 # --- PIM
-  /bim:
+  /pim:
     get:
       tags:
       - "PIM"
@@ -133,15 +147,15 @@ paths:
       description: "Send SCPI command to PIM"
       operationId: "controllers.default_controller.pim_post"
       parameters:
-      - in: "body"
-        name: "scpi_command"
+      - in: "formData"
+        name: "pim_scpi_command"
         description: "Complete SCPI command as ASCII string."
         required: true
         type: "string"
       responses:
         200:
           description: "SCPI command sent"
-        405:
+        400:
           description: "Invalid input"
       x-tags:
       - hasMore: "true"
@@ -235,7 +249,7 @@ paths:
       responses:
         200:
           description: "Wheel Mode Updated"
-        405:
+        400:
           description: "Invalid input"
       x-tags:
       - hasMore: "true"
@@ -272,7 +286,7 @@ paths:
       responses:
         200:
           description: "Attitude Updated"
-        405:
+        400:
           description: "Invalid input"
       x-tags:
       - hasMore: "true"
@@ -460,6 +474,28 @@ paths:
 ### Data Models
 ############################
 definitions:
+  system_data:
+    properties:
+      time:
+        type: "string"
+        format: "date-time"
+        description: "Current UTC bus time in ISO 8061 format."
+      temperature:
+        type: "number"
+        format: "double"
+        description: "Current micro-controller temperature in Celsius."
+      fault_count:
+        type: "number"
+        format: "integer"
+        description: "Number of faults experienced by the system."
+  bim_status:
+    properties:
+      property1:
+        type: "string"
+  pim_status:
+    properties:
+      property1:
+        type: "string"
   attitude:
     type: "object"
     properties:
@@ -515,6 +551,9 @@ definitions:
         type: "number"
         format: "integer"
         description: "ADCS temperature in celcius"
+      accept_count:
+        type: "number"
+        format: "integer"
       fault_count:
         type: "number"
         format: "integer"
@@ -569,20 +608,6 @@ definitions:
           format: "double"
       faults:
         $ref: "#/definitions/eps_status_faults"
-  eps_battery_data:
-    properties:
-      voltage:
-        type: "array"
-        items:
-          type: "number"
-          format: "double"
-          description: "Cell voltage."
-      temperature:
-        type: "array"
-        items:
-          type: "number"
-          format: "double"
-          description: "Cell temperature."
   eps_bcr_data_output:
     properties:
       voltage:
@@ -637,17 +662,17 @@ definitions:
         type: "number"
         format: "double"
         description: "Voltage of the system's battery bus."
-  system_data:
+  battery_data:
     properties:
-      time:
-        type: "string"
-        format: "date-time"
-        description: "Current UTC bus time in ISO 8061 format."
+      voltage:
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+          description: "Cell voltage."
       temperature:
-        type: "number"
-        format: "double"
-        description: "Current micro-controller temperature in Celsius."
-      fault_count:
-        type: "number"
-        format: "integer"
-        description: "Number of faults experienced by the system."
+        type: "array"
+        items:
+          type: "number"
+          format: "double"
+          description: "Cell temperature."

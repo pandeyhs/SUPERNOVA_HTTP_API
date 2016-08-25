@@ -13,7 +13,7 @@ Handles HTTP requests.
 
 """
 
-import logging, json, os, datetime
+import logging, json, os, datetime, time, threading, Queue
 from multiprocessing import Lock
 
 import supernova_apps as snova
@@ -26,6 +26,14 @@ LOG = logging.getLogger(__name__)
 # --- Bus State
 SOH_FILE_PATH = os.path.join(os.path.dirname(__file__), 'SOH.json')
 soh_lock = Lock()
+
+# ------------------------
+# --- Command Post objects
+
+# --- Prevents command from posting before previous command post finished
+CMD_POST_LOCK = threading.Lock()
+# --- Stores responses from command 
+CMD_POST_RESPONSES = Queue.Queue()
 
 # -------------
 # --- Callbacks
@@ -62,7 +70,8 @@ def command_ack_recd(self, packet_obj, next_count):
     Fired when command is recieved successfully by the Bus.
 
     """
-    msg = 'Command accepted.'
+    CMD_POST_RESPONSES.put(('Success', 200))
+    msg = 'Command accepted by Core FSW.'
     print(msg)
     LOG.info(msg)
 
@@ -71,7 +80,9 @@ def command_nack_recd(self, packet_obj, next_count, err_code):
     Fired when command results in error on Bus.
 
     """
-    msg = 'Command rejected.'
+    CMD_POST_RESPONSES.put(('Bad Request', 400))
+    # TODO: eventually handle other HTTP error codes based on Core err_code
+    msg = 'Command rejected by Core FSW.'
     print(msg)
     LOG.info(msg)
 
@@ -203,6 +214,31 @@ def _read_soh():
     soh_lock.release()
     return soh
 
+def _command_post(cmd_pkt_name, arguments):
+    """
+    Handle sending a command to Core FSW.
+
+    Args:
+        cmd_pkt_name (string): Name of the command to POST
+        arguments (dict): arguments to the command
+
+    """
+    CMD_POST_LOCK.acquire()
+    # --- Create command object
+    command_obj = snova.Command(
+        cmd_pkt_name=cmd_pkt_name,
+        arguments=arguments
+    )
+    # --- Send command object
+    bus_interface.BusCommand.send_command(command_obj)
+    # --- Wait for response for `timeout` seconds
+    try:
+        response = CMD_POST_RESPONSES.get(timeout=5)
+    except Queue.Empty:
+        response = 'Request Timeout', 408
+    CMD_POST_LOCK.release()
+    return response
+
 ############################
 ### API Controllers
 ############################
@@ -221,12 +257,25 @@ def system_get():
     }
     return system
 
+# --- BIM
+def bim_get():
+    soh = _read_soh()
+    bim = {}
+    return bim
+
+# --- PIM
+def pim_get():
+    soh = _read_soh()
+    pim = {}
+    return pim
+
 # --- ADCS
 def adcs_get():
     soh = _read_soh()
     status_text = ['SUN_POINT', 'FINE_REF_POINT']
     adcs = {
         'fault_count': soh['ACS_FAULT_COUNT'],
+        'accept_count': soh['ACS_CMD_ACCEPT_CNT'],
         'temperature': soh['ACS_AN_BOX1_TEMP'],
         'adcs_mode':{
             'id': soh['ACS_ADCS_MODE'],
@@ -271,27 +320,6 @@ def adcs_coarse_sun_sensor_get():
         'sun_body_vector_3': soh['ACS_CSS_MSBV'][2]
     }
     return adcs_coarse_sun_sensor
-
-def adcs_gps_get():
-    soh = _read_soh()
-    adcs_gps = {
-        'enabled': soh['ACS_GPS_ENABLE'],
-        'valid': soh['ACS_GPS_VALID']
-    }
-    return adcs_gps
-
-def adcs_gps_state_get():
-    soh = _read_soh()
-    adcs_gps_state = {
-        'eci_x_km': soh['ACS_GPS_POS_ECEF'][0],
-        'eci_y_km': soh['ACS_GPS_POS_ECEF'][1],
-        'eci_z_km': soh['ACS_GPS_POS_ECEF'][2],
-        'eci_dx_kms': soh['ACS_GPS_VEL_ECEF'][0],
-        'eci_dy_kms': soh['ACS_GPS_VEL_ECEF'][1],
-        'eci_dz_kms': soh['ACS_GPS_VEL_ECEF'][2],
-        'time': soh['ACS_TAI_SECS']
-    }
-    return adcs_gps_state
 
 def adcs_propagator_attitude_get():
     soh = _read_soh()
@@ -343,6 +371,28 @@ def adcs_star_tracker_attitude_get():
     }
     return adcs_star_tracker_attitude
 
+# --- GPS
+def gps_get():
+    soh = _read_soh()
+    adcs_gps = {
+        'enabled': soh['ACS_GPS_ENABLE'],
+        'valid': soh['ACS_GPS_VALID']
+    }
+    return adcs_gps
+
+def gps_state_get():
+    soh = _read_soh()
+    adcs_gps_state = {
+        'eci_x_km': soh['ACS_GPS_POS_ECEF'][0],
+        'eci_y_km': soh['ACS_GPS_POS_ECEF'][1],
+        'eci_z_km': soh['ACS_GPS_POS_ECEF'][2],
+        'eci_dx_kms': soh['ACS_GPS_VEL_ECEF'][0],
+        'eci_dy_kms': soh['ACS_GPS_VEL_ECEF'][1],
+        'eci_dz_kms': soh['ACS_GPS_VEL_ECEF'][2],
+        'time': soh['ACS_TAI_SECS']
+    }
+    return adcs_gps_state
+
 # --- EPS
 def eps_get():
     soh = _read_soh()
@@ -357,22 +407,6 @@ def eps_get():
         }
     }
     return eps
-
-def eps_battery_get():
-    soh = _read_soh()
-    eps_battery = {
-        'temperature': [
-            soh['BAT_0_TEMP'],
-            soh['BAT_1_TEMP'],
-            soh['BAT_2_TEMP']
-        ],
-        'voltage': [
-            soh['BAT_0_BAT_V'],
-            soh['BAT_1_BAT_V'],
-            soh['BAT_2_BAT_V']
-        ]
-    }
-    return eps_battery
 
 def eps_bcr_get():
     soh = _read_soh()
@@ -415,25 +449,47 @@ def eps_voltage_get():
     }
     return eps_voltage
 
+# --- Battery
+def battery_get():
+    soh = _read_soh()
+    eps_battery = {
+        'temperature': [
+            soh['BAT_0_TEMP'],
+            soh['BAT_1_TEMP'],
+            soh['BAT_2_TEMP']
+        ],
+        'voltage': [
+            soh['BAT_0_BAT_V'],
+            soh['BAT_1_BAT_V'],
+            soh['BAT_2_BAT_V']
+        ]
+    }
+    return eps_battery
 
 # --------
 # --- POST
 # --------
+def system_noop_post():
+    CMD_POST_RESPONSES.put(('Success', 200))
+    noop_args = {}
+    return _command_post('NOOP', noop_args)
+
 def system_reset_post(reset_type):
     reset_types = ['SYS_REBOOT', 'WDOG', 'ALL_HW_OFF']
     try:
-        reset_arguments = {
+        reset_args = {
             'RESET_TYPE': reset_types.index(reset_type)
         }
     except:
-        return 'Invalid Input', 405
+        return 'Invalid Input', 400
     else:
-        command_obj = snova.Command(
-            cmd_pkt_name='SW_RESET',
-            arguments=reset_arguments
-        )
-        bus_interface.BusCommand.send_command(command_obj)
-        return 'Success', 200
+        return _command_post('SW_RESET', reset_args)
+
+def bim_post():
+    pass
+
+def pim_post():
+    pass
 
 def adcs_wheel_mode_post(wheel_mode):
     # !!! This assumes BCT ADCS
@@ -447,14 +503,9 @@ def adcs_wheel_mode_post(wheel_mode):
             'ARC_WHEEL_MODE': mode_types.index(wheel_mode['mode'])
         }
     except:
-        return 'Invalid Input', 405
+        return 'Invalid Input', 400
     else:
-        command_obj = snova.Command(
-            cmd_pkt_name='ACS_RAW_SETWHEELMODE',
-            arguments=wheel_mode_arguments
-        )
-        bus_interface.BusCommand.send_command(command_obj)
-        return 'Command Sent', 200
+        return _command_post('ACS_RAW_SETWHEELMODE', wheel_mode_arguments)
 
 def adcs_attitude_post(attitude):
     # !!! This assumes BCT ADCS
@@ -468,11 +519,6 @@ def adcs_attitude_post(attitude):
             'ARC_Q_B_WRT_I_4': attitude['eci_qz']
         }
     except:
-        return 'Invalid Input', 405
+        return 'Invalid Input', 400
     else:
-        command_obj = snova.Command(
-            cmd_pkt_name='ACS_RAW_SETATTITUDE',
-            arguments=attitude_arguments
-        )
-        bus_interface.BusCommand.send_command(command_obj)
-        return 'Command Sent', 200
+        return _command_post('ACS_RAW_SETATTITUDE', attitude_arguments)
