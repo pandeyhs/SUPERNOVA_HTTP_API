@@ -9,7 +9,7 @@
 #FITNESS FOR A PARTICULAR PURPOSE.
 ################################################################################
 """
-Handles HTTP requests.
+Handle HTTP requests.
 
 """
 
@@ -18,14 +18,16 @@ from multiprocessing import Lock
 
 import supernova_apps as snova
 
+import conversion
+
 # ------------------
 # --- LOGGING CONFIG
 LOG = logging.getLogger(__name__)
 
 # -------------
 # --- Bus State
-SOH_FILE_PATH = os.path.join(os.path.dirname(__file__), 'SOH.json')
-soh_lock = Lock()
+DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), 'DATA.json')
+data_file_lock = Lock()
 
 # ------------------------
 # --- Command Post objects
@@ -44,7 +46,7 @@ def bus_telem_ack_recd(self, packet_obj, next_count):
     """
     msg = 'Telemetry ACK recieved.'
     print(msg)
-    LOG.info(msg)
+    LOG.debug(msg)
 
 def bus_telem_nack_recd(self, packet_obj, next_count, err_code):
     """
@@ -53,7 +55,7 @@ def bus_telem_nack_recd(self, packet_obj, next_count, err_code):
     """
     msg = 'Telemetry NACK recieved.'
     print(msg)
-    LOG.info(msg)
+    LOG.debug(msg)
 
 def telemetry_recd(self, telemetry_obj):
     """
@@ -62,8 +64,22 @@ def telemetry_recd(self, telemetry_obj):
     Default behavior is `pass` because this is payload specific.
 
     """
-    soh = _convert_soh(telemetry_obj)
-    _write_soh(soh)
+    # --- Check packet ID & convert values to engineering units accordingly
+    conversion_function = conversion.table[telemetry_obj.packet_id]
+    values = conversion_function(telemetry_obj.values)
+    # --- Read data file
+    data = _read_data()
+    # --- Update data values & write to file
+    for key in values:
+        data[telemetry_obj.tlm_pkt_name][key] = values[key]
+    _write_data(data)
+    # NOTE: We are reading and overwriting the whole data JSON file here.
+    #   At some point it might make more sense to use a document store like 
+    #   MongoDB instead of a JSON file.
+
+    msg = 'Telemetry packet [{}] received.'.format(telemetry_obj.tlm_pkt_name)
+    print(msg)
+    LOG.debug(msg)
 
 def command_ack_recd(self, packet_obj, next_count):
     """
@@ -84,7 +100,7 @@ def command_nack_recd(self, packet_obj, next_count, err_code):
     # TODO: eventually handle other HTTP error codes based on Core err_code
     msg = 'Command rejected by Core FSW.'
     print(msg)
-    LOG.info(msg)
+    LOG.debug(msg)
 
 # -------------------
 # --- Service Manager
@@ -95,124 +111,37 @@ bus_interface.BusTelemPacket.nack_recd.register(bus_telem_nack_recd)
 bus_interface.BusTelemPacket.telemetry_recd.register(telemetry_recd)
 bus_interface.BusCommand.ack_recd.register(command_ack_recd)
 bus_interface.BusCommand.nack_recd.register(command_nack_recd)
-# --- Enable Packet
+# --- Request Packets (default 1Hz, continuous)
+bus_interface.BusTelemPacket.request(113) # --- State of Health default Telemetry
+bus_interface.BusTelemPacket.request(87) # --- GPS Oribit Data Telemetry
+bus_interface.BusTelemPacket.request(44) # --- Battery Telemetry
+bus_interface.BusTelemPacket.request(95) # --- BIM Telemetry
+bus_interface.BusTelemPacket.request(98) # --- PIM Telemetry
+# --- Enable Packets
 bus_interface.BusTelemPacket.reporting_enable()
 print('bus_interface service manager configured')
 
 # ---------------------
 # --- Private Functions
-def _convert_soh(telemetry_obj):
-    """
-    Converts State of Health telemetry into dictionary of engineering units.
-
-    """
-    telemetry_obj.values["ACS_TAI_SECS"] = (telemetry_obj.values["ACS_TAI_SECS"] * .2)
-
-    qecef_converted = [v * 1e-9 for v in telemetry_obj.values["ACS_QECEF_ECI"]]
-    telemetry_obj.values["ACS_QECEF_ECI"] = (qecef_converted)
-
-    orbit_pos_converted = [v * 2e-5 for v in telemetry_obj.values["ACS_ORBIT_POS_ECI"]]
-    telemetry_obj.values["ACS_ORBIT_POS_ECI"] = (orbit_pos_converted)
-
-    orbit_vel_converted = [v * 2e-9 for v in telemetry_obj.values["ACS_ORBIT_VEL_ECI"]]
-    telemetry_obj.values["ACS_ORBIT_VEL_ECI"] = (orbit_vel_converted)
-
-    att_quat_converted = [v * 5e-10 for v in telemetry_obj.values["ACS_ATT_QUAT"]]
-    telemetry_obj.values["ACS_ATT_QUAT"] = (att_quat_converted)
-
-    wheel_spd_converted = [v * .4 for v in telemetry_obj.values["ACS_WH_MS_SPEED"]]
-    telemetry_obj.values["ACS_WH_MS_SPEED"] = (wheel_spd_converted)
-
-    star_tr_converted = [v * 4.88e-10 for v in telemetry_obj.values["ACS_TR_ATT"]]
-    telemetry_obj.values["ACS_TR_ATT"] = (star_tr_converted)
-
-    sun_vector_converted = [v * 0.0001 for v in telemetry_obj.values["ACS_CSS_MSBV"]]
-    telemetry_obj.values["ACS_CSS_MSBV"] = (sun_vector_converted)
-
-    # Analog Telem for ACS
-    telemetry_obj.values["ACS_AN_V5P0"] = (telemetry_obj.values["ACS_AN_V5P0"] * .025)
-    telemetry_obj.values["ACS_AN_V3P3"] = (telemetry_obj.values["ACS_AN_V3P3"] * .015)
-    telemetry_obj.values["ACS_AN_V2P5"] = (telemetry_obj.values["ACS_AN_V2P5"] * .015)
-    telemetry_obj.values["ACS_AN_V1P8"] = (telemetry_obj.values["ACS_AN_V1P8"] * .015)
-    telemetry_obj.values["ACS_AN_V1P0"] = (telemetry_obj.values["ACS_AN_V1P0"] * .015)
-    telemetry_obj.values["ACS_AN_TDT"] = (telemetry_obj.values["ACS_AN_TDT"] * .8)
-    telemetry_obj.values["ACS_AN_BOX1_TEMP"] = (telemetry_obj.values["ACS_AN_BOX1_TEMP"] * .005)
-    telemetry_obj.values["ACS_AN_BOX2_TEMP"] = (telemetry_obj.values["ACS_AN_BOX2_TEMP"] * .005)
-    telemetry_obj.values["ACS_AN_WHT1"] = (telemetry_obj.values["ACS_AN_WHT1"] * .005)
-    telemetry_obj.values["ACS_AN_WHT2"] = (telemetry_obj.values["ACS_AN_WHT2"] * .005)
-    telemetry_obj.values["ACS_AN_WHT3"] = (telemetry_obj.values["ACS_AN_WHT3"] * .005)
-    telemetry_obj.values["ACS_AN_V12B"] = (telemetry_obj.values["ACS_AN_V12B"] * .001)
-
-    # GPS
-    ecef_gps_converted = [v * 2e-5 for v in telemetry_obj.values["ACS_GPS_POS_ECEF"]]
-    telemetry_obj.values["ACS_GPS_POS_ECEF"] = (ecef_gps_converted)
-
-    ecef_v_gps = [v * 5e-9 for v in telemetry_obj.values["ACS_GPS_VEL_ECEF"]]
-    telemetry_obj.values["ACS_GPS_VEL_ECEF"] = (ecef_v_gps)
-
-    # Tracker control
-    trcl_conv = [v * 1e-9 for v in telemetry_obj.values["ACS_TRCL_QTWB"]]
-    telemetry_obj.values["ACS_TRCL_QTWB"] = (trcl_conv)
-
-    # Power
-    # System Volts
-    telemetry_obj.values["EPS_VPCM12V"] = (telemetry_obj.values["EPS_VPCM12V"] * .02 - 5.8)
-    telemetry_obj.values["EPS_VPCM5V"] = (telemetry_obj.values["EPS_VPCM5V"] * .008 - 1.89)
-    telemetry_obj.values["EPS_VPCM3V3"] = (telemetry_obj.values["EPS_VPCM3V3"] * .0059 - 1.23)
-    telemetry_obj.values["EPS_VPCMBATV"] = (telemetry_obj.values["EPS_VPCMBATV"] * .0094 - .37)
-    telemetry_obj.values["EPS_VIDIODE_OUT"] = (telemetry_obj.values["EPS_VIDIODE_OUT"] * .009 - .024)
-
-    # Current
-    telemetry_obj.values["EPS_IPCM12V"] = (telemetry_obj.values["EPS_IPCM12V"] * 2.063 - 1.95)
-    telemetry_obj.values["EPS_IPCM5V"] = (telemetry_obj.values["EPS_IPCM5V"] * 5.289 - 36.448)
-    telemetry_obj.values["EPS_IPCM3V3"] = (telemetry_obj.values["EPS_IPCM3V3"] * 5.288 - 14.770)
-    telemetry_obj.values["EPS_IPCMBATV"] = (telemetry_obj.values["EPS_IPCMBATV"] * 5.284 - 19.076)
-    telemetry_obj.values["EPS_IIDIODE_OUT"] = (telemetry_obj.values["EPS_IIDIODE_OUT"] * 14.201 - 7.87)
-
-    # BCR Volts
-    telemetry_obj.values["EPS_VBCR1"] = (telemetry_obj.values["EPS_VBCR1"] * .025 - .031)
-    telemetry_obj.values["EPS_VBCR2"] = (telemetry_obj.values["EPS_VBCR2"] * .025 - .059)
-    telemetry_obj.values["EPS_VBCR3"] = (telemetry_obj.values["EPS_VBCR3"] * .01 - .002)
-    telemetry_obj.values["EPS_VBCR4"] = (telemetry_obj.values["EPS_VBCR4"] * .025 - .025)
-    telemetry_obj.values["EPS_VBCR5"] = (telemetry_obj.values["EPS_VBCR5"] * .025 - .082)
-    telemetry_obj.values["EPS_VBCR6"] = (telemetry_obj.values["EPS_VBCR6"] * .025 + .006)
-    telemetry_obj.values["EPS_VBCR7"] = (telemetry_obj.values["EPS_VBCR7"] * .025 - .015)
-    telemetry_obj.values["EPS_VBCR8"] = (telemetry_obj.values["EPS_VBCR8"] * .025 - .02)
-    telemetry_obj.values["EPS_VBCR9"] = (telemetry_obj.values["EPS_VBCR9"] * .025 - .03)
-
-    # Battery Volts/temps
-    telemetry_obj.values["BAT_0_BAT_V"] = (telemetry_obj.values["BAT_0_BAT_V"] * -.011 + 10.165)
-    telemetry_obj.values["BAT_1_BAT_V"] = (telemetry_obj.values["BAT_1_BAT_V"] * -.011 + 10.026)
-    telemetry_obj.values["BAT_2_BAT_V"] = (telemetry_obj.values["BAT_2_BAT_V"] * -.011 + 10.184)
-    telemetry_obj.values["BAT_0_TEMP"] = (telemetry_obj.values["BAT_0_TEMP"] * -.314 + 131.392)
-    telemetry_obj.values["BAT_1_TEMP"] = (telemetry_obj.values["BAT_1_TEMP"] * -.303 + 130.212)
-    telemetry_obj.values["BAT_2_TEMP"] = (telemetry_obj.values["BAT_2_TEMP"] * -.309 + 131.85)
-
-    # Board Temps
-    telemetry_obj.values["EPS_TBRD"] = (telemetry_obj.values["EPS_TBRD"] * .372 - 273.15)
-    telemetry_obj.values["EPS_TBRD_DB"] = (telemetry_obj.values["EPS_TBRD_DB"] * .372 - 273.15)
-
-    return telemetry_obj.values
-
-def _write_soh(soh):
+def _write_data(data):
     """
     Writes state of health to file.
     """
-    soh_lock.acquire()
-    with open(SOH_FILE_PATH, 'w+') as f:
-        json.dump(soh, f, ensure_ascii=False)
-    soh_lock.release()
+    data_file_lock.acquire()
+    with open(DATA_FILE_PATH, 'w+') as f:
+        json.dump(data, f, ensure_ascii=False)
+    data_file_lock.release()
 
-def _read_soh():
+def _read_data():
     """
     Reads state of health from file & converts to Py object.
 
     """
-    soh_lock.acquire()
-    with open(SOH_FILE_PATH, 'r') as f:
-        soh = json.load(f)
-    soh_lock.release()
-    return soh
+    data_file_lock.acquire()
+    with open(DATA_FILE_PATH, 'r') as f:
+        data = json.load(f)
+    data_file_lock.release()
+    return data
 
 def _command_post(cmd_pkt_name, arguments):
     """
@@ -249,219 +178,219 @@ def _command_post(cmd_pkt_name, arguments):
 
 # --- System
 def system_get():
-    soh = _read_soh()
+    data = _read_data()
     system = {
-        'fault_count': soh['SOH_CDH_FAULT_COUNT'],
-        'temperature': soh['BD_cpu_temp'],
+        'fault_count': data['TLMITEM_1_PL']['SOH_CDH_FAULT_COUNT'],
+        'temperature': data['TLMITEM_1_PL']['BD_cpu_temp'],
         'time': datetime.datetime.now().isoformat()
     }
     return system
 
 # --- BIM
 def bim_get():
-    soh = _read_soh()
+    data = _read_data()
     bim = {}
     return bim
 
 # --- PIM
 def pim_get():
-    soh = _read_soh()
+    data = _read_data()
     pim = {}
     return pim
 
 # --- ADCS
 def adcs_get():
-    soh = _read_soh()
-    status_text = ['SUN_POINT', 'FINE_REF_POINT']
+    data = _read_data()
+    mode_text = ['SUN_POINT', 'FINE_REF_POINT']
     adcs = {
-        'fault_count': soh['ACS_FAULT_COUNT'],
-        'accept_count': soh['ACS_CMD_ACCEPT_CNT'],
-        'temperature': soh['ACS_AN_BOX1_TEMP'],
+        'fault_count': data['TLMITEM_1_PL']['ACS_FAULT_COUNT'],
+        'accept_count': data['TLMITEM_1_PL']['ACS_CMD_ACCEPT_CNT'],
+        'temperature': data['TLMITEM_1_PL']['ACS_AN_BOX1_TEMP'],
         'adcs_mode':{
-            'id': soh['ACS_ADCS_MODE'],
-            'text': status_text[soh['ACS_ADCS_MODE']]
+            'id': data['TLMITEM_1_PL']['ACS_ADCS_MODE'],
+            'text': mode_text[data['TLMITEM_1_PL']['ACS_ADCS_MODE']]
         }
     }
     return adcs
 
 def adcs_state_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_state = {
-        'eci_x_km': soh['ACS_ORBIT_POS_ECI'][0],
-        'eci_y_km': soh['ACS_ORBIT_POS_ECI'][1],
-        'eci_z_km': soh['ACS_ORBIT_POS_ECI'][2],
-        'eci_dx_kms': soh['ACS_ORBIT_VEL_ECI'][0],
-        'eci_dy_kms': soh['ACS_ORBIT_VEL_ECI'][1],
-        'eci_dz_kms': soh['ACS_ORBIT_VEL_ECI'][2],
-        'time': soh['ACS_TAI_SECS']
+        'eci_x_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][0],
+        'eci_y_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][1],
+        'eci_z_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][2],
+        'eci_dx_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][0],
+        'eci_dy_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][1],
+        'eci_dz_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][2],
+        'time': data['TLMITEM_1_PL']['ACS_TAI_SECS']
     }
     return adcs_state
 
 def adcs_attitude_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_attitude = {
-        'eci_qw': soh['ACS_ATT_QUAT'][0],
-        'eci_qx': soh['ACS_ATT_QUAT'][1],
-        'eci_qy': soh['ACS_ATT_QUAT'][2],
-        'eci_qz': soh['ACS_ATT_QUAT'][3]
+        'eci_qw': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][0],
+        'eci_qx': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][1],
+        'eci_qy': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][2],
+        'eci_qz': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][3]
     }
     return adcs_attitude
 
 def adcs_coarse_sun_sensor_get():
-    soh = _read_soh()
+    data = _read_data()
     status_text = ['GOOD', 'COARSE', 'BAD']
     adcs_coarse_sun_sensor = {
         'status': {
-            'id': soh['ACS_CSS_MSBVS'],
-            'text': status_text[soh['ACS_CSS_MSBVS']]
+            'id': data['TLMITEM_1_PL']['ACS_CSS_MSBVS'],
+            'text': status_text[data['TLMITEM_1_PL']['ACS_CSS_MSBVS']]
         },
-        'sun_body_vector_1': soh['ACS_CSS_MSBV'][0],
-        'sun_body_vector_2': soh['ACS_CSS_MSBV'][1],
-        'sun_body_vector_3': soh['ACS_CSS_MSBV'][2]
+        'sun_body_vector_1': data['TLMITEM_1_PL']['ACS_CSS_MSBV'][0],
+        'sun_body_vector_2': data['TLMITEM_1_PL']['ACS_CSS_MSBV'][1],
+        'sun_body_vector_3': data['TLMITEM_1_PL']['ACS_CSS_MSBV'][2]
     }
     return adcs_coarse_sun_sensor
 
 def adcs_propagator_attitude_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_propagator_attitude = {
-        'eci_qw': soh['ACS_ATT_QUAT'][0],
-        'eci_qx': soh['ACS_ATT_QUAT'][1],
-        'eci_qy': soh['ACS_ATT_QUAT'][2],
-        'eci_qz': soh['ACS_ATT_QUAT'][3]
+        'eci_qw': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][0],
+        'eci_qx': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][1],
+        'eci_qy': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][2],
+        'eci_qz': data['TLMITEM_1_PL']['ACS_ATT_QUAT'][3]
     }
     return adcs_propagator_attitude
 
 def adcs_propagator_state_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_propagator_state = {
-        'eci_x_km': soh['ACS_ORBIT_POS_ECI'][0],
-        'eci_y_km': soh['ACS_ORBIT_POS_ECI'][1],
-        'eci_z_km': soh['ACS_ORBIT_POS_ECI'][2],
-        'eci_dx_kms': soh['ACS_ORBIT_VEL_ECI'][0],
-        'eci_dy_kms': soh['ACS_ORBIT_VEL_ECI'][1],
-        'eci_dz_kms': soh['ACS_ORBIT_VEL_ECI'][2],
-        'time': soh['ACS_TAI_SECS']
+        'eci_x_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][0],
+        'eci_y_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][1],
+        'eci_z_km': data['TLMITEM_1_PL']['ACS_ORBIT_POS_ECI'][2],
+        'eci_dx_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][0],
+        'eci_dy_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][1],
+        'eci_dz_kms': data['TLMITEM_1_PL']['ACS_ORBIT_VEL_ECI'][2],
+        'time': data['TLMITEM_1_PL']['ACS_TAI_SECS']
     }
     return adcs_propagator_state
 
 def adcs_star_tracker_get():
-    soh = _read_soh()
-    status_text_attitude = ['OK', 'BAD', 'TOO_FEW_STARS', 'REQUEST_FAILED',
+    data = _read_data()
+    status_text = ['OK', 'BAD', 'TOO_FEW_STARS', 'REQUEST_FAILED',
         'RESIDUALS_TOO_HIGH']
-    status_text_attitude_rate = ['OK', 'BAD']
+    rate_status_text = ['OK', 'BAD']
     adcs_star_tracker = {
         'tracker_attitude_status': {
-            'id': soh['ACS_TR_ATT_STAT'],
-            'text': status_text_attitude[soh['ACS_TR_ATT_STAT']]
+            'id': data['TLMITEM_1_PL']['ACS_TR_ATT_STAT'],
+            'text': status_text[data['TLMITEM_1_PL']['ACS_TR_ATT_STAT']]
         },
         'tracker_rate_attitude_status': {
-            'id': soh['ACS_TR_RT_EST_STAT'],
-            'text': status_text_attitude_rate[soh['ACS_TR_RT_EST_STAT']]
+            'id': data['TLMITEM_1_PL']['ACS_TR_RT_EST_STAT'],
+            'text': rate_status_text[data['TLMITEM_1_PL']['ACS_TR_RT_EST_STAT']]
         }
     }
     return adcs_star_tracker
 
 def adcs_star_tracker_attitude_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_star_tracker_attitude = {
-        'eci_qw': soh['ACS_TR_ATT'][0],
-        'eci_qx': soh['ACS_TR_ATT'][1],
-        'eci_qy': soh['ACS_TR_ATT'][2],
-        'eci_qz': soh['ACS_TR_ATT'][3]
+        'eci_qw': data['TLMITEM_1_PL']['ACS_TR_ATT'][0],
+        'eci_qx': data['TLMITEM_1_PL']['ACS_TR_ATT'][1],
+        'eci_qy': data['TLMITEM_1_PL']['ACS_TR_ATT'][2],
+        'eci_qz': data['TLMITEM_1_PL']['ACS_TR_ATT'][3]
     }
     return adcs_star_tracker_attitude
 
 # --- GPS
 def gps_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_gps = {
-        'enabled': soh['ACS_GPS_ENABLE'],
-        'valid': soh['ACS_GPS_VALID']
+        'enabled': data['TLMITEM_1_PL']['ACS_GPS_ENABLE'],
+        'valid': data['TLMITEM_1_PL']['ACS_GPS_VALID']
     }
     return adcs_gps
 
 def gps_state_get():
-    soh = _read_soh()
+    data = _read_data()
     adcs_gps_state = {
-        'eci_x_km': soh['ACS_GPS_POS_ECEF'][0],
-        'eci_y_km': soh['ACS_GPS_POS_ECEF'][1],
-        'eci_z_km': soh['ACS_GPS_POS_ECEF'][2],
-        'eci_dx_kms': soh['ACS_GPS_VEL_ECEF'][0],
-        'eci_dy_kms': soh['ACS_GPS_VEL_ECEF'][1],
-        'eci_dz_kms': soh['ACS_GPS_VEL_ECEF'][2],
-        'time': soh['ACS_TAI_SECS']
+        'eci_x_km': data['TLMITEM_1_PL']['ACS_GPS_POS_ECEF'][0],
+        'eci_y_km': data['TLMITEM_1_PL']['ACS_GPS_POS_ECEF'][1],
+        'eci_z_km': data['TLMITEM_1_PL']['ACS_GPS_POS_ECEF'][2],
+        'eci_dx_kms': data['TLMITEM_1_PL']['ACS_GPS_VEL_ECEF'][0],
+        'eci_dy_kms': data['TLMITEM_1_PL']['ACS_GPS_VEL_ECEF'][1],
+        'eci_dz_kms': data['TLMITEM_1_PL']['ACS_GPS_VEL_ECEF'][2],
+        'time': data['TLMITEM_1_PL']['ACS_TAI_SECS']
     }
     return adcs_gps_state
 
 # --- EPS
 def eps_get():
-    soh = _read_soh()
+    data = _read_data()
     eps = {
         'epsTemperatures': [
-            soh['EPS_TBRD'],
-            soh['EPS_TBRD_DB']
+            data['TLMITEM_1_PL']['EPS_TBRD'],
+            data['TLMITEM_1_PL']['EPS_TBRD_DB']
         ],
         'faults': {
-            'battery': soh['SOH_BAT_FAULT_COUNT'],
-            'eps': soh['SOH_EPS_FAULT_COUNT']
+            'battery': data['TLMITEM_1_PL']['SOH_BAT_FAULT_COUNT'],
+            'eps': data['TLMITEM_1_PL']['SOH_EPS_FAULT_COUNT']
         }
     }
     return eps
 
 def eps_bcr_get():
-    soh = _read_soh()
+    data = _read_data()
     eps_bcr = {
         'input': [
-            soh['EPS_VBCR1'],
-            soh['EPS_VBCR2'],
-            soh['EPS_VBCR3'],
-            soh['EPS_VBCR4'],
-            soh['EPS_VBCR5'],
-            soh['EPS_VBCR6'],
-            soh['EPS_VBCR7'],
-            soh['EPS_VBCR8'],
-            soh['EPS_VBCR9']
+            data['TLMITEM_1_PL']['EPS_VBCR1'],
+            data['TLMITEM_1_PL']['EPS_VBCR2'],
+            data['TLMITEM_1_PL']['EPS_VBCR3'],
+            data['TLMITEM_1_PL']['EPS_VBCR4'],
+            data['TLMITEM_1_PL']['EPS_VBCR5'],
+            data['TLMITEM_1_PL']['EPS_VBCR6'],
+            data['TLMITEM_1_PL']['EPS_VBCR7'],
+            data['TLMITEM_1_PL']['EPS_VBCR8'],
+            data['TLMITEM_1_PL']['EPS_VBCR9']
         ],
         'output': {
-            'current': soh['EPS_IIDIODE_OUT'],
-            'voltage': soh['EPS_VIDIODE_OUT']
+            'current': data['TLMITEM_1_PL']['EPS_IIDIODE_OUT'],
+            'voltage': data['TLMITEM_1_PL']['EPS_VIDIODE_OUT']
         }
     }
     return eps_bcr
 
 def eps_current_get():
-    soh = _read_soh()
+    data = _read_data()
     eps_current = {
-        '12V': soh['EPS_IPCM12V'],
-        '3V3': soh['EPS_IPCM3V3'],
-        '5V': soh['EPS_IPCM5V'],
-        'battery': soh['EPS_IPCMBATV']
+        '12V': data['TLMITEM_1_PL']['EPS_IPCM12V'],
+        '3V3': data['TLMITEM_1_PL']['EPS_IPCM3V3'],
+        '5V': data['TLMITEM_1_PL']['EPS_IPCM5V'],
+        'battery': data['TLMITEM_1_PL']['EPS_IPCMBATV']
     }
     return eps_current
 
 def eps_voltage_get():
-    soh = _read_soh()
+    data = _read_data()
     eps_voltage = {
-        '12V': soh['EPS_VPCM12V'],
-        '3V3': soh['EPS_VPCM3V3'],
-        '5V': soh['EPS_VPCM5V'],
-        'battery': soh['EPS_VPCMBATV']
+        '12V': data['TLMITEM_1_PL']['EPS_VPCM12V'],
+        '3V3': data['TLMITEM_1_PL']['EPS_VPCM3V3'],
+        '5V': data['TLMITEM_1_PL']['EPS_VPCM5V'],
+        'battery': data['TLMITEM_1_PL']['EPS_VPCMBATV']
     }
     return eps_voltage
 
 # --- Battery
 def battery_get():
-    soh = _read_soh()
+    data = _read_data()
     eps_battery = {
         'temperature': [
-            soh['BAT_0_TEMP'],
-            soh['BAT_1_TEMP'],
-            soh['BAT_2_TEMP']
+            data['TLMITEM_1_PL']['BAT_0_TEMP'],
+            data['TLMITEM_1_PL']['BAT_1_TEMP'],
+            data['TLMITEM_1_PL']['BAT_2_TEMP']
         ],
         'voltage': [
-            soh['BAT_0_BAT_V'],
-            soh['BAT_1_BAT_V'],
-            soh['BAT_2_BAT_V']
+            data['TLMITEM_1_PL']['BAT_0_BAT_V'],
+            data['TLMITEM_1_PL']['BAT_1_BAT_V'],
+            data['TLMITEM_1_PL']['BAT_2_BAT_V']
         ]
     }
     return eps_battery
