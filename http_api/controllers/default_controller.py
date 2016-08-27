@@ -71,13 +71,13 @@ def telemetry_recd(self, telemetry_obj):
     data = _read_data()
     # --- Update data values & write to file
     for key in values:
-        data[telemetry_obj.tlm_pkt_name][key] = values[key]
+        data[telemetry_obj.name][key] = values[key]
     _write_data(data)
     # NOTE: We are reading and overwriting the whole data JSON file here.
     #   At some point it might make more sense to use a document store like 
     #   MongoDB instead of a JSON file.
 
-    msg = 'Telemetry packet [{}] received.'.format(telemetry_obj.tlm_pkt_name)
+    msg = 'Telemetry packet [{}] received.'.format(telemetry_obj.name)
     print(msg)
     LOG.debug(msg)
 
