@@ -189,13 +189,27 @@ def system_get():
 # --- BIM
 def bim_get():
     data = _read_data()
-    bim = {}
+    bim = {
+        'error_count': data['BIMTLM']['BIM_ERROR_COUNT'],
+        'command_count': data['BIMTLM']['BIM_COMMAND_COUNT'],
+        'uart1_status': data['BIMTLM']['BIM_UART_STATUS_1'],
+        'uart2_status': data['BIMTLM']['BIM_UART_STATUS_2'],
+        'uart3_status': data['BIMTLM']['BIM_UART_STATUS_3'],
+        'pin_puller_status': data['BIMTLM']['BIM_TINI_STATUS']
+    }
     return bim
 
 # --- PIM
 def pim_get():
     data = _read_data()
-    pim = {}
+    pim = {
+        'error_count': data['PIMTLM']['BIM_ERROR_COUNT'],
+        'command_count': data['PIMTLM']['BIM_COMMAND_COUNT'],
+        'payload_port1_status': data['PIMTLM']['PIM_PORT_STATUS_1'],
+        'payload_port2_status': data['PIMTLM']['PIM_PORT_STATUS_2'],
+        'payload_port3_status': data['PIMTLM']['PIM_PORT_STATUS_3'],
+        'payload_port4_status': data['PIMTLM']['PIM_PORT_STATUS_4']
+    }
     return pim
 
 # --- ADCS
@@ -414,11 +428,14 @@ def system_reset_post(reset_type):
     else:
         return _command_post('SW_RESET', reset_args)
 
+# TODO - find out how to send SCPI commands.
+'''
 def bim_post():
     pass
 
 def pim_post():
     pass
+'''
 
 def adcs_wheel_mode_post(wheel_mode):
     # !!! This assumes BCT ADCS

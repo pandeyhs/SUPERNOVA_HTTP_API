@@ -103,26 +103,26 @@ paths:
       - hasMore: "true"
         tag: "BIM"
       - tag: "GET"
-    post:
-      tags:
-      - "BIM"
-      description: "Send SCPI command to BIM"
-      operationId: "controllers.default_controller.bim_post"
-      parameters:
-      - in: "formData"
-        name: "bim_scpi_command"
-        description: "Complete SCPI command as ASCII string."
-        required: true
-        type: "string"
-      responses:
-        200:
-          description: "SCPI command sent"
-        400:
-          description: "Invalid input"
-      x-tags:
-      - hasMore: "true"
-        tag: "BIM"
-      - tag: "POST"
+#    post:
+#      tags:
+#      - "BIM"
+#      description: "Send SCPI command to BIM"
+#      operationId: "controllers.default_controller.bim_post"
+#      parameters:
+#      - in: "formData"
+#        name: "bim_scpi_command"
+#        description: "Complete SCPI command as ASCII string."
+#        required: true
+#        type: "string"
+#      responses:
+#        200:
+#          description: "SCPI command sent"
+#        400:
+#          description: "Invalid input"
+#      x-tags:
+#      - hasMore: "true"
+#        tag: "BIM"
+#      - tag: "POST"
 
 # --- PIM
   /pim:
@@ -141,26 +141,26 @@ paths:
       - hasMore: "true"
         tag: "PIM"
       - tag: "GET"
-    post:
-      tags:
-      - "PIM"
-      description: "Send SCPI command to PIM"
-      operationId: "controllers.default_controller.pim_post"
-      parameters:
-      - in: "formData"
-        name: "pim_scpi_command"
-        description: "Complete SCPI command as ASCII string."
-        required: true
-        type: "string"
-      responses:
-        200:
-          description: "SCPI command sent"
-        400:
-          description: "Invalid input"
-      x-tags:
-      - hasMore: "true"
-        tag: "PIM"
-      - tag: "POST"
+#    post:
+#      tags:
+#      - "PIM"
+#      description: "Send SCPI command to PIM"
+#      operationId: "controllers.default_controller.pim_post"
+#      parameters:
+#      - in: "formData"
+#        name: "pim_scpi_command"
+#        description: "Complete SCPI command as ASCII string."
+#        required: true
+#        type: "string"
+#      responses:
+#        200:
+#          description: "SCPI command sent"
+#        400:
+#          description: "Invalid input"
+#      x-tags:
+#      - hasMore: "true"
+#        tag: "PIM"
+#      - tag: "POST"
 
 # --- GPS
   /gps:
@@ -490,12 +490,44 @@ definitions:
         description: "Number of faults experienced by the system."
   bim_status:
     properties:
-      property1:
-        type: "string"
+      error_count:
+        type: "number"
+        format: "integer"
+      command_count:
+        type: "number"
+        format: "integer"
+      uart1_status:
+        type: "number"
+        format: "integer"
+      uart2_status:
+        type: "number"
+        format: "integer"
+      uart3_status:
+        type: "number"
+        format: "integer"
+      pin_puller_status:
+        type: "number"
+        format: "integer"
   pim_status:
     properties:
-      property1:
-        type: "string"
+      error_count:
+        type: "number"
+        format: "integer"
+      command_count:
+        type: "number"
+        format: "integer"
+      payload_port1_status:
+        type: "number"
+        format: "integer"
+      payload_port2_status:
+        type: "number"
+        format: "integer"
+      payload_port3_status:
+        type: "number"
+        format: "integer"
+      payload_port4_status:
+        type: "number"
+        format: "integer"
   attitude:
     type: "object"
     properties:
