@@ -122,8 +122,6 @@ A UI interface to the Bus is provided in examples/ui that commands and pulls
 data from the Bus over HTTP. See examples/ui/README.md for more information
 about the UI.
 
-For more about the HTTP interface, see [docs/http_api.md](docs/http_api.md)...
-
 ---
 
 ## Release History
